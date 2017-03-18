@@ -10,9 +10,9 @@ ruleset echo {
             something = "Hello World"
     }
 
-    rule message {
-        select when echo message input
+    rule message is active {
+        select when echo message input re#(.*)# setting(m);
         send_directive("say") with  
-            something = input
+            something = m
     }   
 }
