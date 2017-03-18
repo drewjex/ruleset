@@ -2,12 +2,6 @@ ruleset track_trips {
     meta {
         name "Track Trips"
         author "Drew Jex"
-        shares __testing
-    }
-
-    global {
-        __testing = { "events": [ { "domain": "track_trips", "type": "process_trip" ,
-                                "attrs": [ "mileage" ] } ] }
     }
 
     rule process_trip is active {
