@@ -2,6 +2,13 @@ ruleset echo {
     meta {
         name "Echo"
         author "Drew Jex"
+        shares __testing
+    }
+
+    global {
+        __testing = { "events": [ { "domain": "echo", "type": "hello" },
+                                { "domain": "echo", "type": "message",
+                                "attrs": [ "input" ] } ] }
     }
 
     rule hello {
