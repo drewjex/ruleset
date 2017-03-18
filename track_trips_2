@@ -1,0 +1,12 @@
+ruleset track_trips_2 {
+    meta {
+        name "Track Trips"
+        author "Drew Jex"
+    }
+
+    rule process_trip is active {
+        select when car new_trip mileage re#(.*)# setting(m);
+        send_directive("trip") with  
+            trip_length = m
+    }
+}
