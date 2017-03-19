@@ -1,6 +1,7 @@
 ruleset track_trips_2 {
     meta {
         name "Track Trips"
+        logging on
         author "Drew Jex"
     }
 
