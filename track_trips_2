@@ -13,22 +13,22 @@ ruleset track_trips_2 {
         select when car new_trip mileage re#(.*)# setting(m);
         fired {
             raise explicit event "trip_processed"
-                attributes { "attrs" : event:attrs() }
+                attributes { "attrs" : event:attrs(), "timestamp" : time:now() }
         }
     }
 
     rule find_long_trips {
         select when explicit trip_processed
         pre {
-            m = event:attr("attrs").mileage
-            is_greater = m.as("Number") > long_trip
+            mileage = event:attr("attrs").mileage
+            is_greater = mileage.as("Number") > long_trip
         }
         if is_greater then
             send_directive("found_long_trip")
-                with new_long_trip = m
+                with new_long_trip = mileage
         fired {
             raise explicit event "found_long_trip"
-                attributes { "attrs" : event:attrs() }
+                attributes { "mileage" : mileage }
         }
     }
 }
