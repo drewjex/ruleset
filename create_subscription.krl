@@ -42,6 +42,10 @@ ruleset create_subscription {
       { "eci": eci, "eid": "install-ruleset",
         "domain": "pico", "type": "new_ruleset",
         "attrs": { "rid": "track_trips" } } )
+      event:send(
+      { "eci": eci, "eid": "install-ruleset",
+        "domain": "pico", "type": "new_ruleset",
+        "attrs": { "rid": "track_trips_2" } } )
     
   }
   

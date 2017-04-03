@@ -27,6 +27,24 @@ ruleset trip_store {
          }
     }
 
+    rule gather_report {
+        select when fleet get_report
+            pre {
+                parent_eci = event:attr("parent_eci")
+                attributes = {
+                    "trips" : trips(),
+                    "eci" : event:attr("current_eci"),
+                    "correlation_id" : event:attr("correlation_id")
+                }
+            }
+            if parent_eci then
+            event:send(
+              { "eci": parent_eci, "eid": 1556, 
+                "domain": "car", "type": "collect_reports",
+                 "attrs": attributes } )
+            
+    }
+
     rule collect_trips {
         select when explicit trip_processed
         pre {

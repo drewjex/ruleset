@@ -2,7 +2,7 @@ ruleset manage_fleet {
   meta {
     use module io.picolabs.pico alias wrangler
     use module Subscriptions
-    shares __testing, get_vehicle_subs, get_vehicles, childFromECI
+    shares __testing, get_vehicle_subs, get_vehicles, get_trips, trip_test, get_reports
   }
   global {
 
@@ -14,9 +14,29 @@ ruleset manage_fleet {
       wrangler:children().klog("Vehicles:")
     }
 
+    get_trips = function() {
+      cloud_url = "http://localhost:8080/sky/cloud/";
+      wrangler:children().map(function(v){
+         response = http:get("http://localhost:8080/sky/cloud/"+v.eci+"/trip_store/trips");
+         response.content.klog()
+      })
+    }
+
+    get_reports = function() {
+       ent:report.klog("Reports from the fleet:")
+    }
+
+    trip_test = function(eci) {
+      response = http:get("http://localhost:8080/sky/cloud/"+eci+"/trip_store/trips");
+      response.klog("result:")
+    }
+
     __testing = { "queries": [ { "name": "__testing" },
                                 { "name": "get_vehicle_subs" },
-                                { "name": "get_vehicles" }
+                                { "name": "get_vehicles" },
+                                { "name": "get_trips"},
+                                { "name": "trip_test", "args": [ "eci" ]},
+                                { "name": "get_reports"}
                                 ],
                   "events": [ ] }
   }
@@ -36,7 +56,7 @@ ruleset manage_fleet {
           attributes {
     "id": "cj0yc6kwl001c2wgamsxbefj6",
     "eci": "cj0yc6kwn001d2wgapurscrh9"
-  }
+          }
     }
   }
 
@@ -74,6 +94,52 @@ ruleset manage_fleet {
        raise wrangler event pending_subscription_approval
           attributes attributes  
      }
+  }
+
+  rule generate_report {
+    select when car generate_report
+      pre {
+        attrs = {
+          "correlation_id" : "crlid"
+        }
+        counter = 0
+      }
+      fired {
+        raise car event "scatter_gather" attributes attrs
+      }
+  }
+ 
+  rule scatter_gather {
+    select when car scatter_gather
+      foreach wrangler:children().map(function(v){v.eci}) setting(x)
+        pre {
+          attributes = {
+            "correlation_id" : event:attr("correlation_id"),
+            "parent_eci" : wrangler:myself().eci,
+            "current_eci" : x
+          }
+        }
+        if x then
+          event:send(
+      { "eci": x, "eid": 1556, 
+        "domain": "fleet", "type": "get_report",
+        "attrs": attributes } )
+        
+  }
+
+  rule collect_reports {
+    select when car collect_reports 
+      pre {
+        attrs = {
+          "trips" : event:attr("trips"),
+          "eci": event:attr("eci"),
+          "correlation_id" : event:attr("correlation_id")
+        }
+      }
+      fired {
+        ent:report := ent:report.union([attrs]);
+        ent:counter := ent:counter + 1
+      }
   }
 
   rule test_subscription {
